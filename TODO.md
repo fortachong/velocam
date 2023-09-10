@@ -48,3 +48,6 @@ Build a prototype using OAK-D device and a laptop on the host side.
 
 ### YOLO on device decoding
 [https://github.com/luxonis/depthai-experiments/tree/master/gen2-yolo/device-decoding](https://github.com/luxonis/depthai-experiments/tree/master/gen2-yolo/device-decoding)
+
+### DepthAI Model Zoo
+[https://github.com/luxonis/depthai-model-zoo/tree/main](https://github.com/luxonis/depthai-model-zoo/tree/main)
