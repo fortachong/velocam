@@ -46,3 +46,5 @@ Build a prototype using OAK-D device and a laptop on the host side.
 ### PINTO model zoo github repository
 [https://github.com/PINTO0309/PINTO_model_zoo/tree/main](https://github.com/PINTO0309/PINTO_model_zoo/tree/main)
 
+### YOLO on device decoding
+[https://github.com/luxonis/depthai-experiments/tree/master/gen2-yolo/device-decoding](https://github.com/luxonis/depthai-experiments/tree/master/gen2-yolo/device-decoding)
