@@ -8,15 +8,15 @@ pipeline = depthai.Pipeline()
 
 # Agregamos una ColorCamera
 cam_rgb = pipeline.create(depthai.node.ColorCamera)
-cam_rgb.setPreviewSize(300,300) #Usaremos el preview output con una resolución de 300 por 300
+cam_rgb.setPreviewSize(672,384) #Usaremos el preview output con una resolución de 300 por 300
 cam_rgb.setInterleaved(False)
 
 # Agregamos un nodo para una red de detección
 detection_nn = pipeline.create(depthai.node.MobileNetDetectionNetwork)
 # Definimos el path para el BLOB (modelo de redes neuronales) detection_nn.setBlobPath("/path/to/model.blob")
 # Usaremos el blobconverter para convertir y descargar el modelo blobconverter.from_zoo()
-detection_nn.setBlobPath(blobconverter.from_zoo(name='mobilenet-ssd', shaves=6))
-#detection_nn.setBlobPath(blobconverter.from_zoo(name='mobilenet-yolo-v4-syg', shaves=6))
+#detection_nn.setBlobPath(blobconverter.from_zoo(name='mobilenet-ssd', shaves=6))
+detection_nn.setBlobPath(blobconverter.from_zoo(name='vehicle-detection-adas-0002', shaves=6))
 #Debemos definir el threshold para filtrar adecuadamente los resultados
 detection_nn.setConfidenceThreshold(0.5)
 
