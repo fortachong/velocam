@@ -153,57 +153,66 @@ if __name__ == "__main__":
                 frame = in_rgb.getCvFrame()
                 tracklets_data = in_tracklets.tracklets
                 for tr in tracklets_data:
-                    roi = tr.roi.denormalize(frame.shape[1], frame.shape[0])
-                    x1 = int(roi.topLeft().x)
-                    y1 = int(roi.topLeft().y)
-                    x2 = int(roi.bottomRight().x)
-                    y2 = int(roi.bottomRight().y)
+                    # Only detect and track vehicles in a z distance 
+                    # <= CONFIG["DISTANCE_THRESHOLD"], default 3 mts
+                    if int(tr.spatialCoordinates.z) <= CONFIG["DISTANCE_THRESHOLD"]:
+                        roi = tr.roi.denormalize(frame.shape[1], frame.shape[0])
+                        x1 = int(roi.topLeft().x)
+                        y1 = int(roi.topLeft().y)
+                        x2 = int(roi.bottomRight().x)
+                        y2 = int(roi.bottomRight().y)
 
-                    # Update tracked list of objects for trail
-                    if tr.status.name == 'NEW':
-                        TRACKED_OBJECTS[tr.id] = []
-                        TRACKED_OBJECTS[tr.id].append(
-                            (x1,y1,x2,y2,tr.label,tr.status.name,tr.spatialCoordinates.x,tr.spatialCoordinates.y,tr.spatialCoordinates.z)
-                        )
-                    if tr.status.name == 'LOST':
-                        try:
-                            ltr = len(TRACKED_OBJECTS[tr.id])
-                            if ltr > 1:
-                                TRACKED_OBJECTS[tr.id] = TRACKED_OBJECTS[tr.id][1:]
-                            else:
-                                TRACKED_OBJECTS[tr.id] = []
-                        except KeyError:
-                            pass
-                    if tr.status.name == 'TRACKED':
-                        try:
+                        # Update tracked list of objects for trail
+                        # NEW: a new one enters the dictionary
+                        if tr.status.name == 'NEW':
+                            TRACKED_OBJECTS[tr.id] = []
                             TRACKED_OBJECTS[tr.id].append(
                                 (x1,y1,x2,y2,tr.label,tr.status.name,tr.spatialCoordinates.x,tr.spatialCoordinates.y,tr.spatialCoordinates.z)
                             )
-                            ltr = len(TRACKED_OBJECTS[tr.id])
-                            if ltr > CONFIG["TRACK_LIMIT"]:
-                                TRACKED_OBJECTS[tr.id] = TRACKED_OBJECTS[tr.id][1:]
-                        except KeyError:
-                            pass
-                    if tr.status.name == 'REMOVED':
+                        # LOST: update the list by removing the oldest
+                        if tr.status.name == 'LOST':
+                            try:
+                                ltr = len(TRACKED_OBJECTS[tr.id])
+                                if ltr > 1:
+                                    TRACKED_OBJECTS[tr.id] = TRACKED_OBJECTS[tr.id][1:]
+                                else:
+                                    TRACKED_OBJECTS[tr.id] = []
+                            except KeyError:
+                                pass
+                        # TRACKED: add one to the list and remove the oldest if
+                        # higher than CONFIG["TRACK_LIMIT"]
+                        if tr.status.name == 'TRACKED':
+                            try:
+                                TRACKED_OBJECTS[tr.id].append(
+                                    (x1,y1,x2,y2,tr.label,tr.status.name,tr.spatialCoordinates.x,tr.spatialCoordinates.y,tr.spatialCoordinates.z)
+                                )
+                                ltr = len(TRACKED_OBJECTS[tr.id])
+                                if ltr > CONFIG["TRACK_LIMIT"]:
+                                    TRACKED_OBJECTS[tr.id] = TRACKED_OBJECTS[tr.id][1:]
+                            except KeyError:
+                                pass
+                        # REMOVED: delete from dictionary
+                        if tr.status.name == 'REMOVED':
+                            try:
+                                del TRACKED_OBJECTS[tr.id]
+                            except KeyError:
+                                pass
+
                         try:
-                            del TRACKED_OBJECTS[tr.id]
-                        except KeyError:
-                            pass
+                            label = LABEL_MAP[tr.label]
+                        except:
+                            label = tr.label
 
+                        cv2.putText(frame, str(label), (x1 + 10, y1 + 20), cv2.FONT_HERSHEY_DUPLEX, 0.5, 255)
+                        cv2.putText(frame, f"ID: {[tr.id]}", (x1 + 10, y1 + 35), cv2.FONT_HERSHEY_DUPLEX, 0.5, 255)
+                        cv2.putText(frame, tr.status.name, (x1 + 10, y1 + 50), cv2.FONT_HERSHEY_DUPLEX, 0.5, 255)
+                        cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 255, 255), cv2.FONT_HERSHEY_DUPLEX)
 
-                    try:
-                        label = LABEL_MAP[tr.label]
-                    except:
-                        label = tr.label
+                        cv2.putText(frame, f"X: {int(tr.spatialCoordinates.x)} mm", (x1 + 10, y1 + 65), cv2.FONT_HERSHEY_DUPLEX, 0.5, 255)
+                        cv2.putText(frame, f"Y: {int(tr.spatialCoordinates.y)} mm", (x1 + 10, y1 + 80), cv2.FONT_HERSHEY_DUPLEX, 0.5, 255)
+                        cv2.putText(frame, f"Z: {int(tr.spatialCoordinates.z)} mm", (x1 + 10, y1 + 95), cv2.FONT_HERSHEY_DUPLEX, 0.5, 255)
 
-                    cv2.putText(frame, str(label), (x1 + 10, y1 + 20), cv2.FONT_HERSHEY_DUPLEX, 0.5, 255)
-                    cv2.putText(frame, f"ID: {[tr.id]}", (x1 + 10, y1 + 35), cv2.FONT_HERSHEY_DUPLEX, 0.5, 255)
-                    cv2.putText(frame, tr.status.name, (x1 + 10, y1 + 50), cv2.FONT_HERSHEY_DUPLEX, 0.5, 255)
-                    cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 255, 255), cv2.FONT_HERSHEY_DUPLEX)
-
-                    cv2.putText(frame, f"X: {int(tr.spatialCoordinates.x)} mm", (x1 + 10, y1 + 65), cv2.FONT_HERSHEY_DUPLEX, 0.5, 255)
-                    cv2.putText(frame, f"Y: {int(tr.spatialCoordinates.y)} mm", (x1 + 10, y1 + 80), cv2.FONT_HERSHEY_DUPLEX, 0.5, 255)
-                    cv2.putText(frame, f"Z: {int(tr.spatialCoordinates.z)} mm", (x1 + 10, y1 + 95), cv2.FONT_HERSHEY_DUPLEX, 0.5, 255)
+                        # Idea: with the TRACKED_OBJECTS dictionary draw a trail
 
             #if frame is not None:
             #    for detection in detections:
